@@ -19,7 +19,7 @@ jobs:
             git clone --depth=1 https://github.com/kdrag0n/proton-clang
             git clone https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME --depth=1 kernel
 
-      -run:
+      - run:
           name: Compiling
           no_output_timeout: 20m
           command: |
