@@ -30,9 +30,9 @@ jobs:
             export PATH="/root/clang/bin:/root/toolchain/bin:/root/toolchain-arm/bin:$PATH"
             export ARCH=arm64
             export SUBARCH=arm64
-            make clean && make mrproper O=output
-            make vendor/fenix_defconfig O=output
-            make -j$(nproc --all) CC=/root/clang/bin/clang CROSS_COMPILE=/root/toolchain/bin/aarch64-linux-android- CLANG_TRIPLE=/root/clang/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=/root/toolchain-arm/bin/arm-linux-androideabi- O=output
+            sudo make clean && make mrproper O=output
+            sudo make vendor/fenix_defconfig O=output
+            sudo make -j$(nproc --all) CC=/root/clang/bin/clang CROSS_COMPILE=/root/toolchain/bin/aarch64-linux-android- CLANG_TRIPLE=/root/clang/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=/root/toolchain-arm/bin/arm-linux-androideabi- O=output
 
       - run:
           name: Send to telegram
