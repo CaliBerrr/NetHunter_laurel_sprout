@@ -27,11 +27,12 @@ jobs:
             export PATH="/root/proton-clang/bin:$PATH"
             export ARCH=arm64
             export SUBARCH=arm64
+            export USE_CCACHE=1
             export CROSS_COMPILE=aarch64-linux-gnu-
             export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
             make clean && make mrproper O=output
             make vendor/fenix_defconfig O=output
-            make -j$(nproc --all) CC="ccache clang -fcolor-diagnostics -Qunused-arguments"  CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- O=output
+            make -j$(nproc --all) CC=clang  CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- O=output
 
       - run:
           name: Send to telegram
