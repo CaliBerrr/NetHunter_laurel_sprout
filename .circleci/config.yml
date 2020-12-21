@@ -1,0 +1,51 @@
+version: 2.1
+jobs:
+  NetHunter_laurel_sprout:
+   docker:
+      - image: ubuntu:18.04
+   steps:
+      - run:
+          name: Preparing Environment
+          no_output_timeout: 20m
+          command: |
+           export TERM=xterm
+           apt-get update -y && ln -sf /usr/share/zoneinfo/Asia/Dhaka /etc/localtime && apt-get install bison build-essential curl flex git gnupg gperf ccache liblz4-tool libncurses5-dev libsdl1.2-dev libxml2 libxml2-utils lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev build-essential kernel-package libncurses5-dev bzip2 git python wget gcc g++ curl sudo libssl-dev openssl -y
+
+      - run:
+          name: Downloading dependencies & source
+          no_output_timeout: 20m
+          command: |
+            cd ~
+            git clone --depth=1 https://github.com/kdrag0n/proton-clang
+            git clone https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME --depth=1 kernel
+
+      -run:
+          name: Compiling
+          no_output_timeout: 20m
+          command: |
+            cd ~/kernel
+            export PATH="/root/proton-clang/bin:$PATH"
+            export ARCH=arm64
+            export SUBARCH=arm64
+            export CROSS_COMPILE=aarch64-linux-gnu-
+            export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            make clean && make mrproper O=output
+            make vendor/fenix_defconfig O=output
+            make -j$(nproc --all) CC="ccache clang -fcolor-diagnostics -Qunused-arguments"  CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- O=output
+
+      - run:
+          name: Send to telegram
+          no_output_timeout: 20m
+          command: |
+            cd ~/kernel/AnyKernel3
+            cp ../output/arch/arm64/boot/Image.gz-dtb .
+            cp ../output/arch/arm64/boot/dtbo.img .
+            ZIPNAME="NetHunter-$(date +%d_%m_%Y_%H_%M)-laurel_sprout.zip"
+            sudo zip -r9 $ZIPNAME * -x .git README.md *placeholder
+            curl -F chat_id=$CHAT_ID -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_TOKEN/sendDocument
+
+workflows:
+  version: 2.1
+  cooking:
+    jobs:
+      - NetHunter_laurel_sprout
