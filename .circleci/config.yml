@@ -1,52 +1,13 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-jobs:
-  NetHunter_laurel_sprout:
-   docker:
-      - image: ubuntu:18.04
-   steps:
-      - run:
-          name: Preparing Environment
-          no_output_timeout: 20m
-          command: |
-           export TERM=xterm
-           apt-get update -y && ln -sf /usr/share/zoneinfo/Asia/Dhaka /etc/localtime && apt-get install bison build-essential curl flex git gnupg gperf ccache liblz4-tool libncurses5-dev libsdl1.2-dev libxml2 libxml2-utils lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev build-essential kernel-package libncurses5-dev bzip2 git python wget gcc g++ curl sudo libssl-dev openssl -y
-
-      - run:
-          name: Downloading dependencies & source
-          no_output_timeout: 20m
-          command: |
-            cd ~
-            mkdir clang && wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r399163.tar.gz -O clang.tar.gz && tar -xzf clang.tar.gz -C clang && rm clang.tar.gz
-            git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 toolchain
-            git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 toolchain-arm
-            git clone https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME --depth=1 kernel
-
-      - run:
-          name: Compiling
-          no_output_timeout: 20m
-          command: |
-            cd ~/kernel
-            sudo  export CROSS_COMPILE=$HOME/toolchain/bin/aarch64-linux-android-
-            sudo export PATH="/root/clang/bin:/root/toolchain/bin:/root/toolchain-arm/bin:$PATH"
-            sudo export ARCH=arm64
-            sudo export SUBARCH=arm64
-            sudo make clean && make mrproper O=output
-            sudo make vendor/fenix_defconfig O=output
-            sudo make -j$(nproc --all) CC=/root/clang/bin/clang CROSS_COMPILE=/root/toolchain/bin/aarch64-linux-android- CLANG_TRIPLE=/root/clang/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=/root/toolchain-arm/bin/arm-linux-androideabi- O=output
-
-      - run:
-          name: Send to telegram
-          no_output_timeout: 20m
-          command: |
-            cd ~/kernel/AnyKernel3
-            cp ../output/arch/arm64/boot/Image.gz-dtb .
-            cp ../output/arch/arm64/boot/dtbo.img .
-            ZIPNAME="NetHunter-$(date +%d_%m_%Y_%H_%M)-laurel_sprout.zip"
-            sudo zip -r9 $ZIPNAME * -x .git README.md *placeholder
-            curl -F chat_id=$CHAT_ID -F document=@$ZIPNAME -F parse_mode=markdown https://api.telegram.org/bot$BOT_TOKEN/sendDocument
-
+# Use a package of configuration called an orb.
+orbs:
+  # Declare a dependency on the welcome-orb
+  welcome: circleci/welcome-orb@0.4.1
+# Orchestrate or schedule a set of jobs
 workflows:
-  version: 2.1
-  cooking:
+  # Name the workflow "welcome"
+  welcome:
+    # Run the welcome/run job in its own container
     jobs:
-      - NetHunter_laurel_sprout
+      - welcome/run
